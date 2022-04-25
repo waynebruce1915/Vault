@@ -1,0 +1,701 @@
+$hM_1
+
+pkg load symbolic
+% set the symbolic vars
+syms m k x w L;
+% Analytical Solution
+% In simple harmonic motion, the restoring force is F = -kx
+F = -k*x; % -- (i)
+% the potential energy can be computed using ‘PE = - \int dx F‘
+potential_energy = - int(F, x)
+% potential energy = total energy when the displacement is maximum i.e. x=\pm L
+total_energy = subs(potential_energy, x, L);
+kinetic_energy = total_energy - potential_energy
+% setting initial parameters
+L = input("Enter length "); % m
+m = input("Enter mass of bob "); % kg
+k = input("Enter k "); % N/m
+% energy plot
+
+fig = figure();
+ezplot(eval(potential_energy), [-L L]);
+ezplot(eval(kinetic_energy), [-L L]);
+line([-L L], [0, 0]);
+line([-L L], [eval(total_energy) eval(total_energy)]);
+title("Energy vs displacement");
+xlabel("Displacement[m]");
+ylabel("Energy[J]");
+legend("PE", "KE", "location", "eastoutside");
+
+syms x(t);
+% the positon could be computed by solving the linear homogenous ordinary differential equation
+eqn = diff(diff(x, t), t) == - w^2 * x
+solution_de_eq = dsolve(eqn)
+displacement = rhs(solution_de_eq);
+velocity = diff(displacement, t);
+acceleration = diff(velocity, t);
+C1 = C2 = 1; % assuming the amplitude A = C1 = C2 = 1
+w = k / m; % angular frequency
+% solution for displacement is given by rhs(solution_de_eq)
+t = 0:0.1:20;
+pos = eval(displacement);
+vel = eval(velocity);
+acc = eval(acceleration);
+
+fig = figure();
+plot(pos, "linewidth", 2)
+plot(vel, "linewidth", 2)
+title("");
+xlabel("Time[s] [1 unit=0.1s]");
+ylabel("Magnitude");
+legend("x[m]", "v[m/s]", "location", "eastoutside");
+
+fig = figure();
+plot(acc, "linewidth", 2)
+title("");
+xlabel("Time[s] [1 unit=0.1s]");
+ylabel("Magnitude");
+legend("a[m/s/s]", "location", "eastoutside");
+ylim([-5 5])
+
+
+$hm_2
+
+pkg load symbolic
+% set the symbolic variables
+syms t A x(t) k m b;
+% the positon could be computed by solving the linear homogenous ordinary differential equation
+eqn = diff(diff(x, t), t) + k*x/m + b * diff(x, t) / m == 0
+% solve the differential equation analytically
+solution_de_eq = dsolve(eqn)
+displacement = rhs(solution_de_eq);
+% settings the coefficients to 1 for simplicity
+C1 = C2 = A = 1;
+% Underdamped
+m = k = 1;
+b = 0.2;
+x = v = a = [];
+% computing time and displacement
+t = 0:0.1:100;
+underdamped_x = eval(displacement);
+% Critical damping
+m = k = 1;
+b = 4;
+x = v = a = [];
+% computing time and displacement
+t = 0:0.1:100;
+critical_x = eval(displacement);
+% Overdamped
+m = k = 1;
+b = 8;
+x = v = a = [];
+% computing time and displacement
+t = 0:0.1:100;
+overdamped_x = eval(displacement);
+% plot the displacements
+
+figure();
+plot(underdamped_x, "linewidth", 2)
+plot(critical_x, "linewidth", 2)
+plot(overdamped_x, "linewidth", 2)
+title("Damped oscillator")
+set(gcf, ’renderer’, ’painters’);
+legend("Underdamped", "Critically damped", "Overdamped");
+print(gcf, "plot_displacement.tex", "-dpdflatexstandalone");
+legend boxoff;
+xlim([0, 1000])
+ylim([-2.5, 2.5])
+xlabel("Time(s) [1 unit = 0.1s]")
+ylabel("Amplitude(m)")
+
+% for computing energy
+b = 0.2;
+energy = 0.5*k*A*A*exp(-b*t/m);
+% plotting energy
+
+figure();
+plot(energy, "linewidth", 2)
+title("Damped oscillator Energy")
+set(gcf, ’renderer’, ’painters’);
+legend boxoff;
+% xlim([0, 1000])
+% ylim([-2.5, 2.5])
+xlabel("Time(s) [1 unit = 0.1s]")
+ylabel("Energy(J)")
+
+
+$imple Pend
+pkg load symbolic
+% set symbolic vars
+syms theta0 omega t t0
+theta = theta0 * cos(omega * (t - t0))
+% initial parameters
+m = input("Enter mass of bob ");
+l = input("Enter the length of string ");
+t0 = input("Enter t0 ");
+tf = input("Enter tf ");
+% initial parameters
+% assuming the initial theta is pi/4
+theta0 = pi/4;
+g = 9.81; % m/s/s gravitational acceleration
+omega = sqrt(g/l);
+idx = 1;
+x = y = theta = dtheta = vx = vy = [];
+% loop for numerically computing theta, dtheta, positions and velocities
+for t=t0:0.1:tf
+theta(idx) = theta0 * cos(omega * (t - t0));
+dtheta(idx) = -omega * theta0 * sin(omega * (t-t0));
+x(idx) = l * sin(theta(idx));
+y(idx) = -l * cos(theta(idx));
+vx(idx) = l * dtheta(idx) * cos(theta(idx));
+vy(idx) = l * dtheta(idx) * sin(theta(idx));
+idx = idx + 1;
+endfor
+% for computing energy
+v2 = vx.*vx + vy.*vy;
+kinetic_energy = 0.5 * m .* v2;
+potential_energy = m*g .* (l .+ y);
+% plotting the trajectory
+
+figure()
+plot(x, y, "linewidth", 2);
+title("Trajectory");
+xlabel("X[m]");
+ylabel("Y[m]");
+ylim([-l-0.5, 0])
+
+% plotting the positions
+figure()
+plot(x, "linewidth", 2);
+plot(y, "linewidth", 2);
+title("Position[m]");
+xlabel("Time(s) [1 unit = 0.1s]");
+ylabel("Displacement(m)");
+legend("X", "Y");
+
+% plotting the energy
+figure()
+plot(kinetic_energy, "linewidth", 2);
+plot(potential_energy, "linewidth", 2);
+title("Energy");
+xlabel("Time(s) [1 unit = 0.1s]");
+ylabel("Energy(J)");
+legend("KE", "PE");
+
+
+projectile
+
+pkg load symbolic
+% set the symbolic vars
+syms x0 y0 t g v0 th theta;
+% Analytical Solution for projectile motion
+% Time of flight
+T = 2 * v0 * sin(theta) / g;
+% Max height reached
+H = v0**2 * sin(theta)**2 / (2 * g);
+% Range
+R = v0**2 * sin(2*theta) / (2 * g);
+% Initial parameters
+g = 9.81; % m/s/s
+v0 = 20;
+th = pi/4;
+x0 = 0;
+y0 = 0;
+% Positions
+x = v0 * cos(th) * t
+y = v0 * sin(th) * t - 0.5*g*t*t
+% velocities
+vx = v0 * cos(th)
+vy = v0 * sin(th) - g * t
+t0 = input("Enter t0 ")
+tf = input("Enter tf ")
+x = y = [];
+m = 1;
+% loop for numerically computing the motion
+% NOTE: the loop will break when y < 0
+for t=t0:0.1:tf
+x(m) = v0 * cos(th) * t;
+y(m) = v0 * sin(th) * t - 0.5*g*t*t;
+if (y(m) < 0)
+display("BREAK")
+break
+endif
+m = m + 1;
+endfor
+% plotting the trajectory
+
+figure()
+plot(x, y, "marker", "+", "linewidth", 2)
+xlabel("x[m]")
+ylabel("y[m]")
+title("Trajectory")
+ylim([0, 12])
+
+% computing positions for multiple thetas to contrast their ranges
+th = [pi/16, pi/8, pi/4]
+% plotting multiple trajectories
+figure()
+hold on;
+grid on;% loop for computing multiple trajectories
+for i=1:3
+x = y = [];
+m = 1;
+for t=0:0.1:3
+x(m) = v0 * cos(th(i)) * t;
+y(m) = v0 * sin(th(i)) * t - 0.5*g*t*t;
+if (y(m) < 0)
+display("BREAK")
+break
+endif
+m = m + 1;
+endfor
+plot(x, y, "marker", "+", "linewidth", 2);
+drawnow
+endfor
+xlabel("x[m]");
+ylabel("y[m]");
+title("Trajectory");
+legend("theta=pi/16", "theta=pi/8", "theta=pi/4", "location", "northeastoutside")
+legend boxoff
+ylim([0, 12])
+hold off;
+
+Cartes motion
+
+pkg load symbolic
+% set the symbolic variables
+syms x0 y0 t t0 R omega
+% Equations for positions ‘x‘ and ‘y‘
+x = x0 + R*cos(omega * (t-t0));
+y = y0 + R*sin(omega * (t-t0));
+% Equations for velocities
+vx = diff(x, t);
+vy = diff(y, t);
+% Equations for accelerations
+ax = diff(vx, t);
+ay = diff(vy, t);
+
+% Initial conditions
+omega = input("Enter omega ");
+R = input("Enter Radius ");
+x0 = y0 = t0 = 0.0;
+pos_x = pos_y = [];
+vel_x = vel_y = [];
+acc_x = acc_y = [];
+% loop for numerically computing position, velocity and acceleration
+idx = 1;
+for t=0:0.1:5
+pos_x(idx) = eval(x);
+vel_x(idx) = eval(vx);
+acc_x(idx) = eval(ax);
+pos_y(idx) = eval(y);
+vel_y(idx) = eval(vy);
+acc_y(idx) = eval(ay);
+idx = idx + 1;
+endfor
+% plot position, velocity and acceleration
+
+figure();
+plot(pos_x, pos_y, "linewidth", 2);
+xlabel("x[m]");
+ylabel("y[m]");
+title("Trajectory");
+xlim([-3, 3])
+ylim([-3, 3])
+
+figure();
+plot(pos_x, "linewidth", 2);
+plot(pos_y, "linewidth", 2);
+xlabel("Time[s]");
+ylabel("Position[m]");
+title("Position");
+ylim([-5, 5])
+legend("x", "y")
+
+figure();
+plot(vel_x, "linewidth", 2);
+plot(vel_y, "linewidth", 2);
+xlabel("Time[s]");
+ylabel("Velocity[m/s]");
+title("Velocity");
+ylim([-5, 5])
+legend("v_x", "v_y")
+
+figure();
+plot(acc_x, "linewidth", 2);
+plot(acc_y, "linewidth", 2);
+xlabel("Time[s]");
+ylabel("Acceleration[m/s/s]");
+title("Acceleration");
+legend("a_x", "a_y")
+
+
+polar motion
+
+pkg load symbolic
+% set the symbolic variables
+syms theta0 t t0 R omega
+% equations for position theta and x,y for plotting
+th = theta0 + omega * (t-t0)
+x = R * cos(theta0 + omega * (t-t0));
+y = R * sin(theta0 + omega * (t-t0));
+
+% Initial conditions
+omega = input("Enter omega ");
+R = input("Enter radius ");
+t0 = input("Enter t0 ");
+tf = input("Enter tf ");
+theta0 = pi/4
+theta = pos_x = pos_y = [];
+% Loop for numerically calculating positions
+idx = 1;
+for t=t0:0.05:tf
+pos_x(idx) = eval(x);
+pos_y(idx) = eval(y);
+theta(idx) = eval(th);
+idx = idx + 1;
+endfor
+% Plot the trajectory and positions
+
+figure();
+plot(pos_x, pos_y, "linewidth", 2);
+xlabel("x[m]");
+ylabel("y[m]");
+title("Trajectory");
+xlim([-3, 3])
+ylim([-3, 3])
+
+radius = zeros(length(theta), 1) + R;
+figure();
+polar(theta, radius, "x");
+title("Trajectory");
+
+theta_plot = atan(pos_y ./ pos_x);
+figure();
+plot(theta_plot, "linewidth", 2);
+plot([0 150], [pi/2 pi/2], "color", "red", "linewidth", 2);
+plot([0 150], [-pi/2 -pi/2], "color", "red", "linewidth", 2);
+xlabel("Time(s) [1=0.05s]");
+ylabel("theta");
+title("theta vs time");
+xlim([0 150])
+legend("theta", "pi/2", "-pi/2")
+
+Planet
+
+% Defining global parameters\
+global G M;
+% simplifing mass to obtain GM = 100.05 m^3/s^2
+G = 6.67 * 1e-11 % m^3/kg/s^2 -- Newtons graviations constant
+M = 1.5 * 1e12 % kg mass
+printf("Solving using RK45 method")
+% initial position of planet
+r = 10;
+% time parameters
+t0 = 1;
+tf = 2800;
+dt = 0.05;
+% function to calculate acceleration in x direction
+function f = Fx(t, x, y, vx ,vy)
+global G M;
+r = sqrt (x**2 + y**2) ;
+f = -G*M*x/r**3;
+endfunction
+% function to calculate acceleration in y direction
+function f = Fy(t, x, y, vx ,vy)
+global G M;
+r = sqrt (x**2 + y**2) ;
+f = -G*M*y/r**3;
+endfunction
+idx = 1;
+
+figure();
+for e=0:0.1:0.7
+x(1) = r;
+y(1) = 0;
+vx (1) = 0;
+vy (1) = sqrt ((e + 1)*G*M/r); % velocity formula
+for t=t0:tf
+dx1 = dt*vx(t);
+dy1 = dt*vy(t);
+dvx1 = dt*Fx(t*dt, x(t), y(t), vx(t), vy(t));
+dvy1 = dt*Fy(t*dt, x(t), y(t), vx(t), vy(t));
+dvx2 = dt*Fx(t*dt + dt/2, x(t) + dx1/2, y(t) + dy1 /2, vx(t) + dvx1/2, vy(t) + dvy1/2);
+dvy2 = dt*Fy(t*dt + dt/2, x(t) + dx1/2, y(t) + dy1 /2, vx(t) + dvx1/2, vy(t) + dvy1/2);
+dx2 = dt*(vx(t) + dvx1 /2);
+dy2 = dt*(vy(t) + dvy1 /2);
+dvx3 = dt*Fx(t*dt + dt/2, x(t) + dx2/2, y(t) + dy2/2, vx(t) + dvx2/2, vy(t) + dvy2/2);
+dvy3 = dt*Fy(t*dt + dt/2, x(t) + dx2/2, y(t) + dy2/2, vx(t) + dvx2/2, vy(t) + dvy2/2);
+dx3 = dt*(vx(t) + dvx2 /2);
+dy3 = dt*(vy(t) + dvy2 /2);
+dvx4 = dt*Fx(t*dt + dt, x(t) + dx3, y(t) + dy3, vx(t) + dvx3, vy(t) + dvy3);
+dvy4 = dt*Fy(t*dt + dt, x(t) + dx3, y(t) + dy3, vx(t) + dvx3, vy(t) + dvy3);
+dx4 = dt*(vx(t) + dvx3);
+dy4 = dt*(vy(t) + dvy3);
+x(t + 1) = x(t) + (dx1 + 2*dx2 + 2*dx3 + dx4)/6;
+y(t + 1) = y(t) + (dy1 + 2*dy2 + 2*dy3 + dy4)/6;
+vx(t + 1) = vx(t) + (dvx1 + 2*dvx2 + 2*dvx3 + dvx4 )/6;
+vy(t + 1) = vy(t) + (dvy1 + 2*dvy2 + 2*dvy3 + dvy4 )/6;
+endfor
+plot(x, y, "linewidth", 2)
+
+for i=2:tf-1
+if ((sign (y(i + 1)) ~= sign (y(i))) && (x(i) > 0))
+time_period(idx) = (2*i -1) *dt /2;
+break;
+endif
+endfor
+for i=2:tf-1
+if (sign (y(i +1)) ~= sign (y(i)))
+semi_major_axis(idx) = (r -(x(i+1)+x(i))/2)/2;
+break ;
+endif
+endfor
+idx = idx + 1;
+endfor
+title("Trajectories");
+xlabel("X");
+ylabel("Y");
+legend("e=0", "e=0.1", "e=0.2", "e=0.3", "e=0.4", "e=0.5", "e=0.6", "e=0.7", "location", "eastoutside");
+legend boxoff
+
+figure();
+plot(time_period.^2 ,semi_major_axis.^3, "marker", "+", "linewidth", 2);
+xlabel("T^2");
+ylabel("a^3");
+title("Keplers third law (T^2 vs a^3)");
+
+
+EM parti
+
+pkg load symbolic
+% function to compute accelerations
+function retval = F(V, E, B, q, m)
+ax = (E(1) + V(2)*B(3) - V(3)*B(2)) * q/m;
+ay = (E(2) + V(3)*B(1) - V(1)*B(3)) * q/m;
+az = (E(3) + V(1)*B(2) - V(2)*B(1)) * q/m;
+retval = [ax, ay, az];
+endfunction
+% function to compute positions via RK45 method
+function retval = Compute(t0, tf, steps, X, V, E, B, q, m)
+increment = (tf - t0) / steps;
+retval = [X];
+for i=t0:increment:tf
+k1 = F(V, E, B, q, m);
+k2 = F(V + increment*k1/2, E, B, q, m);
+k3 = F(V + increment*k2/2, E, B, q, m);
+k4 = F(V + increment*k3, E, B, q, m);
+X = X + increment*V + (increment**2)*(k1 + k2 + k3)/6;
+V = V + (k1 + 2*k2 + 2*k3 + k4)*increment / 6;
+retval = [retval; X];
+endfor
+endfunction
+printf("Solving equation of motions using RK45 method")
+% Initial conditions
+B = [0 0 1]
+E = [0 0 1]
+pos = [1 0 0]
+V = [0 1 0.1]
+q = 1
+m = 1
+t0 = 0
+tf = 40
+steps = 1000;
+% calling the compute function to compute positions
+X = Compute(t0, tf, steps, pos, V, E, B, q, m);
+% plotting the trajectory
+
+figure()
+plot3(X(:, 1), X(:, 2), X(:, 3), "linewidth", 2);
+xlabel("X");
+ylabel("Y");
+zlabel("Z");
+title("Trajectory");
+
+% Computing current density
+% set the symbolic vars
+syms x y z pi;
+% set the symbolic funcs
+syms B_x(x, y, z) B_y(x, y, z) B_z(x, y, z);
+% magnetic filed
+B = [B_x; B_y; B_z]
+% Magnetic current density
+J = curl(B) * 1e7/ 4*pi
+
+Rel EM Parti
+
+pkg load symbolic
+% function to compute parameters for 1st differential eqn
+function retval = F1(V, E, B, q, m0)
+pdt_x_m0 = (E(1) + V(2)*B(3) - V(3)*B(2)) * q / m0;
+pdt_y_m0 = (E(2) + V(3)*B(1) - V(1)*B(3)) * q / m0;
+pdt_z_m0 = (E(3) + V(1)*B(2) - V(2)*B(1)) * q / m0;
+retval = [pdt_x_m0, pdt_y_m0, pdt_z_m0];
+endfunction
+% function to compute parameters for 2nd differential eqn
+function retval = F2(V, E, B, q, m0)
+retval = V;
+endfunction
+% function to solve the two differential eqn using RK45 method
+function retval = Compute(t0, tf, steps, X, V, E, B, q, m0)
+increment = (tf - t0) / steps;
+retval = [X];
+for i=t0:increment:tf
+p_m0 = VelocityToMomentum(V);
+k11 = F1(p_m0, E, B, q, m0);
+k21 = F1(p_m0 + increment*k11/2, E, B, q, m0);
+k31 = F1(p_m0 + increment*k21/2, E, B, q, m0);
+k41 = F1(p_m0 + increment*k31, E, B, q, m0);
+k12 = F2(V, E, B, q, m0);
+k22 = F2(V + increment*k12/2, E, B, q, m0);
+k32 = F2(V + increment*k22/2, E, B, q, m0);
+k42 = F2(V + increment*k32, E, B, q, m0);
+p_m0 = p_m0 + (k11 + 2*k21 + 2*k31 + k41)*increment / 6;
+V = MomentumToVelocity(p_m0);
+X = X + (k12 + 2*k22 + 2*k32 + k42)*increment / 6;
+retval = [retval; X];
+endfor
+endfunction
+% function to get magnitude of vectors
+function retval = mag(in_value);
+retval = sqrt(in_value(1)*in_value(1) + in_value(2)*in_value(2) + in_value(3)*in_value(3));
+endfunction
+% function to transform momentum to velocity
+function retval = MomentumToVelocity(p_m0)
+retval = p_m0 ./ sqrt(1 + (mag(p_m0)**2));
+endfunction
+% function to transform momentum to velocity
+function retval = VelocityToMomentum(V)
+vel_mag = mag(V);
+if vel_mag > 1
+printf("***** Solutions warning\n");
+endif
+retval = V / sqrt(1 - vel_mag**2);
+endfunction
+% Input parameters
+printf("Intial parameters\n")
+B = [0 0 10]
+E = [0 0 0.1]
+pos = [1 0 0]
+V = [0 0.95 0.1]
+c = 299792458; % m/s
+q = 1;
+m0 = 1;
+t0 = 0;
+tf = 10;
+steps = 1000;
+% computing trajectory
+X = Compute(t0, tf, steps, pos, V, E, B, q, m0);
+% Plotting trajectory
+
+figure()
+plot3(X(:, 1), X(:, 2), X(:, 3));
+xlabel("X");
+ylabel("Y");
+zlabel("Z");
+title("Trajectory");
+
+
+Graphene
+
+% speed of light
+c = 299792458; % m/s
+% loading in the csv data
+printf("Load Data\n")
+format long g
+d = dlmread("locationofdata.csv", ",");
+% extracting the values of epsilon real and imag
+eps_imag = d(:, 5);
+eps_real = d(:, 10);
+omega = d(:, 6);
+% computing epsilon
+eps = sqrt(eps_imag.**2 + eps_real.**2);
+% computing various parameters
+refractive_index = sqrt((eps + eps_real) ./ 2);
+extension_kw = sqrt((eps - eps_real) ./ 2);
+EELS = eps_imag ./ (eps .** 2);
+reflectivity = ((sqrt(eps) - 1) ./ (sqrt(eps) + 1)) .^ 2;
+absorption_alpha = sqrt(eps - eps_real) .* omega .* sqrt(2);
+transmittance = 10 .^ (2 - absorption_alpha);
+emx = transmittance - EELS;
+wavelength = 2 * pi * c / omega;
+printf("Plotting the parameters \n")
+% Plotting the parameters
+
+figure();
+plot(omega, refractive_index, "linewidth", 2)
+title("Refractive Index")
+xlabel("Frequency")
+ylabel("Refractive Index")
+
+figure();
+plot(omega, reflectivity, "linewidth", 2)
+title("Reflectivity")
+xlabel("Frequency")
+ylabel("Reflectivity")
+
+figure();
+plot(omega, transmittance, "linewidth", 2)
+title("Transmittance")
+xlabel("Frequency")
+ylabel("Transmitance")
+
+figure();
+plot(omega, EELS, "linewidth", 2)
+xlabel("Frequency")
+ylabel("Energy loss spectrum")
+title("Energy loss spectrum L(w)")
+
+figure();
+plot(omega, absorption_alpha, "linewidth", 2)
+xlabel("Frequency")
+ylabel("Absoption coeff")
+title("Absoption coeff")
+
+figure();
+plot(omega, extension_kw, "linewidth", 2)
+xlabel("Frequency")
+ylabel("Extension kw")
+title("Extension kw")
+
+figure();
+plot(omega, emx, "linewidth", 2)
+xlabel("Frequency")
+ylabel("Optical conductivity")
+title("Optical conductivity")
+
+figure();
+plot(omega, eps_imag, "linewidth", 2)
+xlabel("Frequency")
+ylabel("Imag(epsilon)")
+title("Imag part of complex dielectric function")
+
+
+Rand W
+
+% load the symbolic package
+pkg load symbolic
+% define symbolic variables
+syms N r_rms
+% random walk
+R = sqrt(N) * r_rms
+% computing
+step = 1;
+total_steps = input("Enter no of steps ");
+% initial position (0, 0)
+x = y = [0];
+% computing
+for i=1:total_steps
+a = rand();
+b = rand();
+x_value = step * cos(2 * pi * a);
+y_value = step * sin(2 * pi * b);
+x(i + 1) = x(i) + x_value;
+y(i + 1) = y(i) + y_value;
+endfor
+% plotting the trajectory
+fig = figure();
+plot(x, y, "linewidth", 2);
+title("Random walk")
+xlabel("X");
+ylabel("Y");
